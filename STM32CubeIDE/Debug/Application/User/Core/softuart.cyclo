@@ -1,0 +1,14 @@
+softuart.c:23:15:SoftUartGpioReadPin	1
+softuart.c:29:6:SoftUartGpioWritePin	1
+softuart.c:35:17:SoftUartInit	2
+softuart.c:69:6:SoftUartTransmitBit	1
+softuart.c:75:17:SoftUartEnableRx	2
+softuart.c:83:17:SoftUartDisableRx	2
+softuart.c:91:9:SoftUartRxAlavailable	1
+softuart.c:97:17:SoftUartReadRxBuffer	4
+softuart.c:114:6:SoftUartTxProcess	7
+softuart.c:166:6:SoftUartRxDataBitProcess	8
+softuart.c:207:6:SoftUartWaitUntilTxComplate	2
+softuart.c:213:17:SoftUartPuts	4
+softuart.c:235:9:SoftUartScanRxPorts	5
+softuart.c:264:6:SoftUartHandler	6

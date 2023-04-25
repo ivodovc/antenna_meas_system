@@ -1,0 +1,7 @@
+../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_bus.h:539:22:LL_AHB2_GRP1_EnableClock	24	static
+../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_bus.h:597:22:LL_AHB2_GRP1_DisableClock	16	static
+C:/Users/IvkoPivko/Desktop/projekt/Core/Src/adc.c:30:6:MX_ADC1_Init	32	static
+C:/Users/IvkoPivko/Desktop/projekt/Core/Src/adc.c:83:6:HAL_ADC_MspInit	72	static
+C:/Users/IvkoPivko/Desktop/projekt/Core/Src/adc.c:121:6:HAL_ADC_MspDeInit	16	static
+C:/Users/IvkoPivko/Desktop/projekt/Core/Src/adc.c:144:6:setVREFINTChannel	32	static
+C:/Users/IvkoPivko/Desktop/projekt/Core/Src/adc.c:158:6:set5Channel	32	static

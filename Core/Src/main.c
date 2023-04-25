@@ -18,7 +18,9 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "dma.h"
+#include "ipcc.h"
 #include "spi.h"
 #include "gpio.h"
 
@@ -26,6 +28,9 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "pll_maxim.h"
+#include "softuart.h"
+
+float read_voltage();
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,6 +63,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 extern void initialise_monitor_handles(void);
+
 /* USER CODE END 0 */
 
 /**
@@ -83,6 +89,9 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+  /* IPCC initialisation */
+  MX_IPCC_Init();
+
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
@@ -91,8 +100,11 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_SPI1_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+  //HAL_TIM_Base_Start_IT(&htim2);
 
+  //SoftUartInit(0,GPIOB,GPIO_PIN_1,GPIOB,GPIO_PIN_0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -101,11 +113,12 @@ int main(void)
   printf("Starting MAX\n");
   EnableChip();
 
-  printf("Init Max\n");
+  //printf("Init Max\n");
   init_PLL();
 
-  printf("write regs custom \n");
+  //printf("write regs custom \n");
   write_regs_SOFT();
+  setIntegerMode();
 
   printf("EnablingRFOUT\n");
   EnableRFOutput();
@@ -113,17 +126,63 @@ int main(void)
   printf("Initialization done\n");
   print_registers();
 
+  //sweep(0, 0, 0);
+  /*for (int i=27; i<2700; i+=1){
+	  //printf("setting %d MHz\n", i);
+	  set_requested_frequency(i);
+	  HAL_Delay(20);
+	  printf(" ");
+  }*/
+
+  //calibrate();
+  for (int i=0; i<4; i++){
+	  printf("RFA PWR: %d\n", i);
+	  setRFA_PWR(i);
+	  program_PLL();
+	  //HAL_Delay(1);
+  }
+  //print_registers();
+  printf("Start\n");
+  printf("frequency, raw, voltage\n");
+  uint32_t freq  = 25;
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+  char* buffer = malloc(3000);
+  buffer[0] = 0;
+  for (int i = 25; i<2500; i++){
+	  	  freq = i;
+	  	  set_requested_frequency(freq);
+
+	  	  GPIO_PinState lock_detect = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2);
+	  	  while(lock_detect!=GPIO_PIN_SET){
+	  		  lock_detect = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2);
+	  	  }
+	  	  float voltage = read_voltage();
+	  	  uint16_t raw = read_raw();
+	  	  sprintf(buffer + strlen(buffer), "%d, %d, %.5f;", freq, raw, voltage);
+	  	  if (i%100 == 0){
+	  		  printf(buffer);
+	  		  printf("\n");
+	  		  buffer[0] = 0;
+	  	  }
+	  	  // log values
+	  	  //printf( "%d, %d, %.5f \n", freq, raw, voltage);
+  }
+  printf(buffer);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+  printf("Done\n");
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
- 	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-	  HAL_Delay(2000);
-
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-	  HAL_Delay(2000);
-
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
+	  HAL_Delay(500);
+	  /*HAL_ADC_Start(&hadc1);
+	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+	  uint16_t raw = HAL_ADC_GetValue(&hadc1);
+	  HAL_ADC_Stop(&hadc1);
+	  printf("ADC Conversion result: %d\n", raw);*/
+	  //LL_PWR_EnableBootC2();
   }
   /* USER CODE END 3 */
 }
@@ -146,7 +205,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
+  RCC_OscInitStruct.PLL.PLLN = 16;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV4;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -157,7 +222,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK4|RCC_CLOCKTYPE_HCLK2
                               |RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;

@@ -1,0 +1,3 @@
+adc_control.c:17:7:read_voltage	1
+adc_control.c:28:10:read_raw	1
+adc_control.c:37:10:calibrate	1

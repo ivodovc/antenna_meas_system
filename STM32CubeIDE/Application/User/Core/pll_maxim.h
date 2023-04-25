@@ -23,6 +23,7 @@ void read_from_PLL();
 void Register_Shutdown();
 
 uint8_t write_to_PLL(uint32_t data);
+uint8_t write_reg(uint32_t data);
 
 
 
