@@ -5,6 +5,7 @@
 "./Application/User/Core/hc_control.o"
 "./Application/User/Core/ipcc.o"
 "./Application/User/Core/main.o"
+"./Application/User/Core/measurements.o"
 "./Application/User/Core/pll_maxim.o"
 "./Application/User/Core/softuart.o"
 "./Application/User/Core/spi.o"

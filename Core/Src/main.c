@@ -143,40 +143,29 @@ int main(void)
   }
   //print_registers();
   printf("Start\n");
-  printf("frequency, raw, voltage\n");
-  uint32_t freq  = 25;
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-  char* buffer = malloc(3000);
-  buffer[0] = 0;
-  for (int i = 25; i<2500; i++){
-	  	  freq = i;
-	  	  set_requested_frequency(freq);
-
-	  	  GPIO_PinState lock_detect = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2);
-	  	  while(lock_detect!=GPIO_PIN_SET){
-	  		  lock_detect = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2);
-	  	  }
-	  	  float voltage = read_voltage();
-	  	  uint16_t raw = read_raw();
-	  	  sprintf(buffer + strlen(buffer), "%d, %d, %.5f;", freq, raw, voltage);
-	  	  if (i%100 == 0){
-	  		  printf(buffer);
-	  		  printf("\n");
-	  		  buffer[0] = 0;
-	  	  }
-	  	  // log values
-	  	  //printf( "%d, %d, %.5f \n", freq, raw, voltage);
-  }
-  printf(buffer);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-  printf("Done\n");
+  uint8_t db_at = 0;
+  freq_char(25, 2500, 1);
+  uint32_t freq_list[] = {1250};
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
-	  HAL_Delay(500);
+	  /*for (int i=0; i<sizeof(freq_list)/4; i++)
+	  {
+		  uint32_t freq  = freq_list[i];
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
+		  set_requested_frequency(freq);
+		  HAL_Delay(10);
+		  uint16_t raw = read_raw();
+		  float voltage = read_voltage();
+		  printf("%d, %d, -%d,", freq, raw, db_at);
+
+	  }
+	  printf("\n");
+	  db_at += 2;*/
 	  /*HAL_ADC_Start(&hadc1);
 	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 	  uint16_t raw = HAL_ADC_GetValue(&hadc1);
