@@ -12,6 +12,7 @@
 "./Application/User/Core/stm32wbxx_hal_msp.o"
 "./Application/User/Core/stm32wbxx_it.o"
 "./Application/User/Core/sysmem.o"
+"./Application/User/Core/tim.o"
 "./Application/User/Startup/startup_stm32wb50cgux.o"
 "./Drivers/CMSIS/system_stm32wbxx.o"
 "./Drivers/STM32WBxx_HAL_Driver/stm32wbxx_hal.o"

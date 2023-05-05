@@ -37,6 +37,8 @@ Application/User/Core/softuart.o: ../Application/User/Core/softuart.c \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_crs.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_spi.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_spi_ex.h \
+ ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim.h \
+ ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim_ex.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_system.h
 ../Application/User/Core/softuart.h:
 ../../Core/Inc/main.h:
@@ -77,4 +79,6 @@ Application/User/Core/softuart.o: ../Application/User/Core/softuart.c \
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_crs.h:
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_spi.h:
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_spi_ex.h:
+../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim.h:
+../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim_ex.h:
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_system.h:

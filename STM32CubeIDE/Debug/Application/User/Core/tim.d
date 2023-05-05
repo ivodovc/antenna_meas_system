@@ -1,5 +1,6 @@
-Drivers/STM32WBxx_HAL_Driver/stm32wbxx_hal_dma_ex.o: \
- C:/Users/IvkoPivko/Desktop/projekt/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_dma_ex.c \
+Application/User/Core/tim.o: \
+ C:/Users/IvkoPivko/Desktop/projekt/Core/Src/tim.c ../../Core/Inc/tim.h \
+ ../../Core/Inc/main.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal.h \
  ../../Core/Inc/stm32wbxx_hal_conf.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_dma.h \
@@ -40,6 +41,8 @@ Drivers/STM32WBxx_HAL_Driver/stm32wbxx_hal_dma_ex.o: \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim_ex.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_system.h
+../../Core/Inc/tim.h:
+../../Core/Inc/main.h:
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal.h:
 ../../Core/Inc/stm32wbxx_hal_conf.h:
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_dma.h:

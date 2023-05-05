@@ -37,6 +37,8 @@ Application/User/Core/pll_maxim.o: ../Application/User/Core/pll_maxim.c \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_crs.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_spi.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_spi_ex.h \
+ ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim.h \
+ ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim_ex.h \
  ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_system.h \
  ../../Core/Inc/spi.h ../Application/User/Core/pll_maxim.h
 ../../Core/Inc/gpio.h:
@@ -78,6 +80,8 @@ Application/User/Core/pll_maxim.o: ../Application/User/Core/pll_maxim.c \
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_crs.h:
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_spi.h:
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_spi_ex.h:
+../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim.h:
+../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_hal_tim_ex.h:
 ../../Drivers/STM32WBxx_HAL_Driver/Inc/stm32wbxx_ll_system.h:
 ../../Core/Inc/spi.h:
 ../Application/User/Core/pll_maxim.h:

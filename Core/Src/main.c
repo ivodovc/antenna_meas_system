@@ -22,6 +22,7 @@
 #include "dma.h"
 #include "ipcc.h"
 #include "spi.h"
+#include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -64,6 +65,15 @@ void SystemClock_Config(void);
 
 extern void initialise_monitor_handles(void);
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if(htim->Instance==TIM2)
+	{
+		SoftUartHandler();
+	}
+}
+#define RX_BUF_LEN 64
+uint8_t RxBuffer[RX_BUF_LEN];
 /* USER CODE END 0 */
 
 /**
@@ -101,10 +111,12 @@ int main(void)
   MX_DMA_Init();
   MX_SPI1_Init();
   MX_ADC1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  //HAL_TIM_Base_Start_IT(&htim2);
+  HAL_TIM_Base_Start_IT(&htim2);
 
-  //SoftUartInit(0,GPIOB,GPIO_PIN_1,GPIOB,GPIO_PIN_0);
+  SoftUartInit(0,GPIOB,GPIO_PIN_1,GPIOB,GPIO_PIN_0);
+  SoftUartEnableRx(0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -146,13 +158,26 @@ int main(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
   uint8_t db_at = 0;
-  freq_char(25, 2500, 1);
+  //freq_char(25, 2500, 1);
   uint32_t freq_list[] = {1250};
+  char string[] = "Hello\n";
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
+	  HAL_Delay(1500);
+	  SoftUartPuts(0,string, sizeof(string));
+	  HAL_Delay(10);
+	  uint8_t avail =SoftUartRxAlavailable(0);
+	  printf("%d\n", avail);
+
+	  if (SoftUartRxAlavailable(0)){
+		  printf("Data availaable\n");
+		  SoftUartReadRxBuffer(0, RxBuffer, RX_BUF_LEN);
+		  printf("Data that arrive: %s\n", RxBuffer);
+	  }
 	  /*for (int i=0; i<sizeof(freq_list)/4; i++)
 	  {
 		  uint32_t freq  = freq_list[i];
@@ -199,7 +224,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
   RCC_OscInitStruct.PLL.PLLN = 16;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV4;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -218,7 +243,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.AHBCLK2Divider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.AHBCLK4Divider = RCC_SYSCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }

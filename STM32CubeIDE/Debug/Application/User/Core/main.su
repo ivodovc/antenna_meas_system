@@ -1,3 +1,4 @@
-C:/Users/IvkoPivko/Desktop/projekt/Core/Src/main.c:73:5:main	24	static
-C:/Users/IvkoPivko/Desktop/projekt/Core/Src/main.c:183:6:SystemClock_Config	112	static
-C:/Users/IvkoPivko/Desktop/projekt/Core/Src/main.c:235:6:Error_Handler	4	static,ignoring_inline_asm
+C:/Users/IvkoPivko/Desktop/projekt/Core/Src/main.c:68:6:HAL_TIM_PeriodElapsedCallback	16	static
+C:/Users/IvkoPivko/Desktop/projekt/Core/Src/main.c:83:5:main	40	static
+C:/Users/IvkoPivko/Desktop/projekt/Core/Src/main.c:208:6:SystemClock_Config	112	static
+C:/Users/IvkoPivko/Desktop/projekt/Core/Src/main.c:260:6:Error_Handler	4	static,ignoring_inline_asm
