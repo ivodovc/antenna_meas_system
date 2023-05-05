@@ -23,13 +23,14 @@
 #include "ipcc.h"
 #include "spi.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "pll_maxim.h"
-#include "softuart.h"
+#include "command_processor.h"
 
 float read_voltage();
 /* USER CODE END Includes */
@@ -72,8 +73,52 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		SoftUartHandler();
 	}
 }
-#define RX_BUF_LEN 64
-uint8_t RxBuffer[RX_BUF_LEN];
+
+#define RX_BFR_SIZE 64
+
+void HAL_Uart_RxCpltCallback(UART_HandleTypeDef *huart);
+
+char RxBuffer[RX_BFR_SIZE];
+command_t global_command = AMS_NONE;
+uint32_t global_args[MAX_ARG_LEN];
+
+char strbuf[64];
+void do_commands(){
+	// check if there is command and if is, then process it
+	if (global_command == AMS_SWEEP){
+		uint32_t from = global_args[0];
+		uint32_t to = global_args[1];
+		uint32_t step = global_args[2];
+		uint32_t i;
+		for (i=from; i<=to; i+=step){
+			  //printf("setting %d MHz\n", i);
+			  set_requested_frequency(i);
+			  HAL_Delay(1);
+			  uint16_t raw = read_raw();
+			  sprintf(strbuf, "{%d, %d}", i, raw);
+			  HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), 100);
+		 }
+		// send last frequency
+		if (i!=to){
+			set_requested_frequency(to);
+			HAL_Delay(1);
+			uint16_t raw = read_raw();
+			sprintf(strbuf, "{%d, %d}", to, raw);
+			HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), 100);
+		}
+		HAL_UART_Transmit(&huart1, (uint8_t*)"]", 2, 100);
+		printf("Done\n");
+		global_command = AMS_NONE;
+	}else if (global_command == AMS_VERSION){
+		strcpy(strbuf, "Antenna Measurement System Version 0.1");
+		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&strbuf, strlen(strbuf));
+		global_command = AMS_NONE;
+	}else if (global_command == AMS_HOWAREYOU){
+		strcpy(strbuf, "I am fine and working. So far so good.\n I feel bit exhausted, but ya know, that's life.");
+		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&strbuf, strlen(strbuf));
+		global_command = AMS_NONE;
+	}
+}
 /* USER CODE END 0 */
 
 /**
@@ -112,11 +157,10 @@ int main(void)
   MX_SPI1_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(&htim2);
-
-  SoftUartInit(0,GPIOB,GPIO_PIN_1,GPIOB,GPIO_PIN_0);
-  SoftUartEnableRx(0);
+  //HAL_TIM_Base_Start_IT(&htim2);
+  HAL_UARTEx_ReceiveToIdle_IT(&huart1, (uint8_t *) RxBuffer, RX_BFR_SIZE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -155,29 +199,13 @@ int main(void)
   }
   //print_registers();
   printf("Start\n");
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-  uint8_t db_at = 0;
-  //freq_char(25, 2500, 1);
-  uint32_t freq_list[] = {1250};
-  char string[] = "Hello\n";
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
-	  HAL_Delay(1500);
-	  SoftUartPuts(0,string, sizeof(string));
-	  HAL_Delay(10);
-	  uint8_t avail =SoftUartRxAlavailable(0);
-	  printf("%d\n", avail);
-
-	  if (SoftUartRxAlavailable(0)){
-		  printf("Data availaable\n");
-		  SoftUartReadRxBuffer(0, RxBuffer, RX_BUF_LEN);
-		  printf("Data that arrive: %s\n", RxBuffer);
-	  }
+	  do_commands();
 	  /*for (int i=0; i<sizeof(freq_list)/4; i++)
 	  {
 		  uint32_t freq  = freq_list[i];
@@ -251,6 +279,18 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+
+		/* start the DMA again */
+		printf("Size %d\n", Size);
+		printf(RxBuffer);
+		printf("Received\n");
+		process_command_string(RxBuffer, &global_command, global_args);
+		HAL_UARTEx_ReceiveToIdle_IT(&huart1, (uint8_t *) RxBuffer, RX_BFR_SIZE);
+		//__HAL_DMA_DISABLE_IT(&hdma_usart1_rx, DMA_IT_HT);
+
+}
 /* USER CODE END 4 */
 
 /**

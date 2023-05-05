@@ -1,0 +1,2 @@
+../Application/User/Core/command_processor.c:12:6:process_arguments	72	dynamic
+../Application/User/Core/command_processor.c:57:6:process_command_string	96	dynamic
