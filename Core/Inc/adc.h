@@ -29,7 +29,8 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+// This is a bug in STM32WB micro, this is copied from STM32H7 drivers
+#define ADC_RESOLUTION_16B 0x00000000UL
 /* USER CODE END Includes */
 
 extern ADC_HandleTypeDef hadc1;

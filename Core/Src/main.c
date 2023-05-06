@@ -92,6 +92,8 @@ void do_commands(){
 		uint32_t i;
 		for (i=from; i<=to; i+=step){
 			  //printf("setting %d MHz\n", i);
+			  if (global_command==AMS_STOP)
+				  return;
 			  set_requested_frequency(i);
 			  HAL_Delay(1);
 			  uint16_t raw = read_raw();
@@ -199,6 +201,7 @@ int main(void)
   }
   //print_registers();
   printf("Start\n");
+  set_requested_frequency(65);
   while (1)
   {
     /* USER CODE END WHILE */
@@ -250,9 +253,9 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
-  RCC_OscInitStruct.PLL.PLLN = 16;
+  RCC_OscInitStruct.PLL.PLLN = 64;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV8;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {

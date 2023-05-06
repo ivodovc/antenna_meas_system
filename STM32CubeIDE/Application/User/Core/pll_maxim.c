@@ -248,6 +248,8 @@ void set_requested_frequency(uint32_t freq){
 	setDIVA(DIVA_caluclated);
 	setR(R_value);
 	program_PLL();
+	// give time to allow PLL to lock into frequency
+	HAL_Delay(1);
 }
 
 void sweep_N(uint32_t from, uint32_t to, uint32_t step){
