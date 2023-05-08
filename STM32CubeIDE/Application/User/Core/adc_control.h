@@ -9,5 +9,6 @@
 #define APPLICATION_USER_CORE_ADC_CONTROL_H_
 
 float read_voltage();
+uint16_t read_raw();
 
 #endif /* APPLICATION_USER_CORE_ADC_CONTROL_H_ */

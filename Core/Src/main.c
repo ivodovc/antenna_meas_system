@@ -42,6 +42,7 @@ float read_voltage();
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define UART_TIMEOUT 100
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -63,14 +64,19 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-extern void initialise_monitor_handles(void);
+int _write(int file, char *ptr, int len) {
+  int DataIdx;
+  for (DataIdx = 0; DataIdx < len; DataIdx++) {
+    ITM_SendChar(*ptr++);
+  }
+  return len;
+}
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance==TIM2)
 	{
-		SoftUartHandler();
+		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
 	}
 }
 
@@ -98,7 +104,7 @@ void do_commands(){
 			  HAL_Delay(1);
 			  uint16_t raw = read_raw();
 			  sprintf(strbuf, "{%d, %d}", i, raw);
-			  HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), 100);
+			  HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), UART_TIMEOUT);
 		 }
 		// send last frequency
 		if (i!=to){
@@ -106,9 +112,9 @@ void do_commands(){
 			HAL_Delay(1);
 			uint16_t raw = read_raw();
 			sprintf(strbuf, "{%d, %d}", to, raw);
-			HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), 100);
+			HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), UART_TIMEOUT);
 		}
-		HAL_UART_Transmit(&huart1, (uint8_t*)"]", 2, 100);
+		HAL_UART_Transmit(&huart1, (uint8_t*)";", 2, UART_TIMEOUT);
 		printf("Done\n");
 		global_command = AMS_NONE;
 	}else if (global_command == AMS_VERSION){
@@ -130,7 +136,6 @@ void do_commands(){
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-   initialise_monitor_handles();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -161,7 +166,7 @@ int main(void)
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  //HAL_TIM_Base_Start_IT(&htim2);
+  HAL_TIM_Base_Start_IT(&htim2);
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, (uint8_t *) RxBuffer, RX_BFR_SIZE);
   /* USER CODE END 2 */
 
@@ -209,25 +214,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
 	  do_commands();
-	  /*for (int i=0; i<sizeof(freq_list)/4; i++)
-	  {
-		  uint32_t freq  = freq_list[i];
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
-		  set_requested_frequency(freq);
-		  HAL_Delay(10);
-		  uint16_t raw = read_raw();
-		  float voltage = read_voltage();
-		  printf("%d, %d, -%d,", freq, raw, db_at);
-
-	  }
-	  printf("\n");
-	  db_at += 2;*/
-	  /*HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-	  uint16_t raw = HAL_ADC_GetValue(&hadc1);
-	  HAL_ADC_Stop(&hadc1);
-	  printf("ADC Conversion result: %d\n", raw);*/
-	  //LL_PWR_EnableBootC2();
   }
   /* USER CODE END 3 */
 }
@@ -244,7 +230,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE
+                              |RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;

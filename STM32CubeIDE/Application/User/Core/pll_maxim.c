@@ -179,51 +179,6 @@ void setIntegerMode(){
 	write_reg(reg0 | (1<<31));
 }
 
-uint32_t R, DIVA;
-// all units in MHz
-void sweep(uint32_t from, uint32_t to, uint32_t step){
-	//set Divider to 128
-	setDIVA(128);
-	setR(1);
-	R=1;
-	DIVA=128;
-	sweep_N(94, 186, 4);
-
-	setDIVA(64);
-	DIVA/=2;
-	setR(1);
-	sweep_N(94, 187, 2);
-
-	setDIVA(32);
-	DIVA/=2;
-	setR(1);
-	sweep_N(94, 187, 1);
-
-	setDIVA(16);
-	DIVA/=2;
-	setR(2);
-	R=2;
-	sweep_N(188, 379, 1);
-
-	setDIVA(8);
-	setR(4);
-	R=4;
-	DIVA/=2;
-	sweep_N(375, 750, 1);
-
-	setDIVA(4);
-	setR(8);
-	R=8;
-	DIVA/=2;
-	sweep_N(750, 1500, 1);
-
-	setDIVA(2);
-	setR(16);
-	R=16;
-	DIVA/=2;
-	sweep_N(1500, 3000, 1);
-}
-
 // freq is in MHz
 void set_requested_frequency(uint32_t freq){
 	// first determine required DIVA value
@@ -249,18 +204,7 @@ void set_requested_frequency(uint32_t freq){
 	setR(R_value);
 	program_PLL();
 	// give time to allow PLL to lock into frequency
-	HAL_Delay(1);
-}
-
-void sweep_N(uint32_t from, uint32_t to, uint32_t step){
-
-	step = 20*step;
-	for (int i=from; i<to; i+=step){
-		setN(i);
-		printf("frequency: %d MHz\n", 32*i/R/DIVA);
-		program_PLL();
-		HAL_Delay(20);
-	}
+	HAL_Delay(10);
 }
 /**
   * @brief Initialize chip as specified in datasheet
@@ -289,7 +233,7 @@ void init_PLL(){
 }
 
 void write_regs_SOFT(){
-	//write registers as specified in MAX emulator
+	//write to registers
 	uint32_t reg0 = 0x80320000;
 	uint32_t reg1 = 0x80033E81;
 	uint32_t reg2 = 0x0C004042;
@@ -312,7 +256,7 @@ uint32_t swap_words(uint32_t rozumne){
 }
 
 // preforms write to register
-uint8_t write_reg(uint32_t data){
+void write_reg(uint32_t data){
 	// determine register address
 	uint32_t reg_addr = data & 0b111;
 
@@ -336,8 +280,7 @@ uint8_t write_reg(uint32_t data){
 				reg5 = data;
 				break;
 			default:
-				// invalid address
-				return 1;
+				// invalid addressLED_GPIO_Port
 				break;
 	}
 }
@@ -375,7 +318,7 @@ void enable_MUXOUT(){
 	write_reg(MUX_enabled_reg2);
 }
 
-void read_from_PLL() {
+/*void read_from_PLL() {
 	uint16_t readback_send[5] = {0, 6, 0, 0, 0};
 	uint32_t buffer = 0;
 	// initiate readback by sending addres of register 6
@@ -389,4 +332,4 @@ void read_from_PLL() {
 	printf("Readback1: %x ", ((uint16_t*)buffer)[0]);
 	printf("%x\n",  ((uint16_t*)buffer)[1]);
 
-}
+}*/
