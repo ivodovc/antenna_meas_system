@@ -147,10 +147,11 @@ void setRFA_PWR(uint8_t rfa_pwr){
 }
 
 void setN(uint16_t N){
-	// bits 4 and 3
+	// set mask
 	uint32_t N_MASK = 0xFFFF << 15;
 	// set bits to zero
 	uint32_t newreg0 = reg0 & ~(N_MASK);
+	// set bits that are supposed to one to one
 	uint32_t newnewreg0 = newreg0 | ((N << 15)&N_MASK);
 	write_reg(newnewreg0);
 }
@@ -204,7 +205,7 @@ void set_requested_frequency(uint32_t freq){
 	setR(R_value);
 	program_PLL();
 	// give time to allow PLL to lock into frequency
-	HAL_Delay(10);
+	HAL_Delay(1);
 }
 /**
   * @brief Initialize chip as specified in datasheet
@@ -303,7 +304,7 @@ uint8_t write_to_PLL(uint32_t data){
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	//HAL_StatusTypeDef result =  HAL_SPI_Transmit(&hspi1, (uint8_t*)pData, 2, 1000);
-	HAL_SPI_Transmit_DMA(&hspi1, (uint8_t*)pData, 2);
+	HAL_SPI_Transmit(&hspi1, (uint8_t*)pData, 2, 100);
 	//printf("SPI Transmit result: %x\n", result);
 	HAL_Delay(1);
 

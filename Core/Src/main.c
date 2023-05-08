@@ -29,6 +29,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <string.h>
 #include "pll_maxim.h"
 #include "command_processor.h"
 
@@ -88,10 +89,11 @@ char RxBuffer[RX_BFR_SIZE];
 command_t global_command = AMS_NONE;
 uint32_t global_args[MAX_ARG_LEN];
 
-char strbuf[64];
+char strbuf[100];
 void do_commands(){
 	// check if there is command and if is, then process it
 	if (global_command == AMS_SWEEP){
+		EnableRFOutput();
 		uint32_t from = global_args[0];
 		uint32_t to = global_args[1];
 		uint32_t step = global_args[2];
@@ -103,26 +105,34 @@ void do_commands(){
 			  set_requested_frequency(i);
 			  HAL_Delay(1);
 			  uint16_t raw = read_raw();
-			  sprintf(strbuf, "{%d, %d}", i, raw);
+			  sprintf(strbuf, "{%lu, %u}", i, raw);
 			  HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), UART_TIMEOUT);
 		 }
 		// send last frequency
 		if (i!=to){
 			set_requested_frequency(to);
-			HAL_Delay(1);
+			//HAL_Delay(1);
 			uint16_t raw = read_raw();
-			sprintf(strbuf, "{%d, %d}", to, raw);
+			sprintf(strbuf, "{%lu, %u}", to, raw);
 			HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), UART_TIMEOUT);
 		}
 		HAL_UART_Transmit(&huart1, (uint8_t*)";", 2, UART_TIMEOUT);
 		printf("Done\n");
 		global_command = AMS_NONE;
+		DisableRFOutput();
+
 	}else if (global_command == AMS_VERSION){
-		strcpy(strbuf, "Antenna Measurement System Version 0.1");
+		strcpy(strbuf, "AMS_MSG(Antenna Measurement System Version 0.1);");
 		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&strbuf, strlen(strbuf));
 		global_command = AMS_NONE;
+
 	}else if (global_command == AMS_HOWAREYOU){
-		strcpy(strbuf, "I am fine and working. So far so good.\n I feel bit exhausted, but ya know, that's life.");
+		strcpy(strbuf, "AMS_MSG(I am fine and working. So far so good.\n I feel bit exhausted, but ya know, that's life.);");
+		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&strbuf, strlen(strbuf));
+		global_command = AMS_NONE;
+
+	}else if (global_command == AMS_CHECK){
+		strcpy(strbuf, "AMS_OK;");
 		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&strbuf, strlen(strbuf));
 		global_command = AMS_NONE;
 	}
@@ -144,7 +154,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  // REMOVE ON DEBUG
 
   /* USER CODE END Init */
 
@@ -175,27 +184,14 @@ int main(void)
   printf("Starting STM32\n");
   printf("Starting MAX\n");
   EnableChip();
-
-  //printf("Init Max\n");
+  // just to be sure PLL RF output is turned off
+  DisableRFOutput();
+  // PLL Must be initialized on PowerUp
   init_PLL();
 
-  //printf("write regs custom \n");
+  // PLL must be set to default configuration specified in write_regs_SOFT
   write_regs_SOFT();
   setIntegerMode();
-
-  printf("EnablingRFOUT\n");
-  EnableRFOutput();
-
-  printf("Initialization done\n");
-  print_registers();
-
-  //sweep(0, 0, 0);
-  /*for (int i=27; i<2700; i+=1){
-	  //printf("setting %d MHz\n", i);
-	  set_requested_frequency(i);
-	  HAL_Delay(20);
-	  printf(" ");
-  }*/
 
   //calibrate();
   for (int i=0; i<4; i++){
@@ -205,14 +201,13 @@ int main(void)
 	  //HAL_Delay(1);
   }
   //print_registers();
-  printf("Start\n");
+  printf("Setting test frequency to 65MHz\n");
   set_requested_frequency(65);
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
 	  do_commands();
   }
   /* USER CODE END 3 */

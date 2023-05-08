@@ -82,8 +82,10 @@ void process_command_string(char* string, command_t* global_command, uint32_t* g
 		*global_command = AMS_SINGLE;
 	}else if (strcmp(command, "HOWAREYOU")== 0){
 		*global_command = AMS_HOWAREYOU;
-	}else if (strcmp(command, "STOp")== 0){
+	}else if (strcmp(command, "STOP")== 0){
 		*global_command = AMS_STOP;
+	}else if (strcmp(command, "CHECK")== 0){
+		*global_command = AMS_CHECK;
 	}else{
 		*global_command = AMS_NONE;
 	}
