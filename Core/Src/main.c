@@ -65,6 +65,14 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+#define RX_BFR_SIZE 64
+
+char RxBuffer[RX_BFR_SIZE];
+command_t global_command = AMS_NONE;
+uint32_t global_args[MAX_ARG_LEN];
+
+
 int _write(int file, char *ptr, int len) {
   int DataIdx;
   for (DataIdx = 0; DataIdx < len; DataIdx++) {
@@ -77,17 +85,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance==TIM2)
 	{
-		HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
+		if (global_command==AMS_NONE){
+			HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
+			DisableRFOutput();//safeguard in case something bad happened in the code
+		}else{
+			HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+		}
 	}
 }
 
-#define RX_BFR_SIZE 64
 
 void HAL_Uart_RxCpltCallback(UART_HandleTypeDef *huart);
 
-char RxBuffer[RX_BFR_SIZE];
-command_t global_command = AMS_NONE;
-uint32_t global_args[MAX_ARG_LEN];
+
 
 char strbuf[100];
 void do_commands(){
@@ -121,6 +131,24 @@ void do_commands(){
 		global_command = AMS_NONE;
 		DisableRFOutput();
 
+	}else if (global_command == AMS_SINGLE){
+		EnableRFOutput();
+		uint32_t f = global_args[0];
+		uint32_t span = global_args[1];
+		uint32_t halfspan = span/2;
+		while (global_command == AMS_SINGLE){
+			for (int i=f-halfspan; i<=f+halfspan; i++){
+				if (global_command==AMS_STOP)
+					break;
+				set_requested_frequency(i);
+				HAL_Delay(1);
+				uint16_t raw = read_raw();
+				sprintf(strbuf, "{%lu, %u}", i, raw);
+				HAL_UART_Transmit_IT(&huart1, (uint8_t*)&strbuf, strlen(strbuf));
+			}
+		}
+		DisableRFOutput();
+		global_command = AMS_NONE;
 	}else if (global_command == AMS_VERSION){
 		strcpy(strbuf, "AMS_MSG(Antenna Measurement System Version 0.1);");
 		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&strbuf, strlen(strbuf));
