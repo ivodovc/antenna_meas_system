@@ -85,7 +85,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance==TIM2)
 	{
-		if (global_command==AMS_NONE){
+		if (global_command==AMS_NONE || global_command==AMS_STOP){
 			HAL_GPIO_TogglePin(LED_RED_GPIO_Port, LED_RED_Pin);
 			DisableRFOutput();//safeguard in case something bad happened in the code
 		}else{
@@ -133,23 +133,64 @@ void do_commands(){
 		global_command = AMS_NONE;
 		DisableRFOutput();
 
+	}else if (global_command == AMS_SWEEP_CONT){
+		uint32_t from = global_args[0];
+		uint32_t to = global_args[1];
+		uint32_t step = global_args[2];
+		uint32_t pwr = global_args[3];
+		EnableRFOutput();
+		setRFA_PWR(pwr-1); // -1 because pwr is defined as 1,2,3,4 but MAX2870 expects 0,1,2,3
+		uint32_t i;
+		while (global_command!=AMS_STOP){
+			for (i=from; i<=to; i+=step){
+				  //printf("setting %d MHz\n", i);
+				  if (global_command==AMS_STOP)
+					  return;
+				  set_requested_frequency(i);
+				  HAL_Delay(1);
+				  uint16_t raw = read_raw();
+				  sprintf(strbuf, "{%lu, %u}", i, raw);
+				  HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), UART_TIMEOUT);
+			 }
+			// send last frequency
+			if (i!=to){
+				set_requested_frequency(to);
+				//HAL_Delay(1);
+				uint16_t raw = read_raw();
+				sprintf(strbuf, "{%lu, %u}", to, raw);
+				HAL_UART_Transmit(&huart1, (uint8_t*)&strbuf, strlen(strbuf), UART_TIMEOUT);
+			}
+		}
+		HAL_UART_Transmit(&huart1, (uint8_t*)";", 2, UART_TIMEOUT);
+		DisableRFOutput();
+		global_command = AMS_NONE;
 	}else if (global_command == AMS_SINGLE){
 		EnableRFOutput();
 		uint32_t f = global_args[0];
-		uint32_t span = global_args[1];
-		uint32_t halfspan = span/2;
-		while (global_command == AMS_SINGLE){
-			for (int i=f-halfspan; i<=f+halfspan; i++){
-				if (global_command==AMS_STOP)
-					break;
-				set_requested_frequency(i);
-				HAL_Delay(1);
-				uint16_t raw = read_raw();
-				sprintf(strbuf, "{%lu, %u}", i, raw);
-				HAL_UART_Transmit_IT(&huart1, (uint8_t*)&strbuf, strlen(strbuf));
-			}
+		uint32_t pwr = global_args[1];
+		setRFA_PWR(pwr-1);
+		set_requested_frequency(f);
+		while(global_command==AMS_SINGLE){
+			;
 		}
 		DisableRFOutput();
+		global_command = AMS_NONE;
+	}else if (global_command == AMS_REGISTER){
+		// all registers should be 32bit numbers
+		uint32_t reg_value_1 = global_args[0];
+		uint32_t reg_value_2 = global_args[1];
+		uint32_t reg_value_3 = global_args[2];
+		uint32_t reg_value_4 = global_args[3];
+		uint32_t reg_value_5 = global_args[4];
+		write_reg(reg_value_1);
+		write_reg(reg_value_2);
+		write_reg(reg_value_3);
+		write_reg(reg_value_4);
+		write_reg(reg_value_5);
+		EnableRFOutput();
+		while(global_command==AMS_SINGLE){
+					;
+		}
 		global_command = AMS_NONE;
 	}else if (global_command == AMS_VERSION){
 		strcpy(strbuf, "AMS_MSG(Antenna Measurement System Version 0.1);");
@@ -157,7 +198,7 @@ void do_commands(){
 		global_command = AMS_NONE;
 
 	}else if (global_command == AMS_HOWAREYOU){
-		strcpy(strbuf, "AMS_MSG(I am fine and working. So far so good.\n I feel bit exhausted, but ya know, that's life.);");
+		strcpy(strbuf, "AMS_MSG(I am fine and working. So far so good.\nI feel bit exhausted, but ya know, that's life.);");
 		HAL_UART_Transmit_IT(&huart1, (uint8_t*)&strbuf, strlen(strbuf));
 		global_command = AMS_NONE;
 
