@@ -103,10 +103,12 @@ char strbuf[100];
 void do_commands(){
 	// check if there is command and if is, then process it
 	if (global_command == AMS_SWEEP){
-		EnableRFOutput();
 		uint32_t from = global_args[0];
 		uint32_t to = global_args[1];
 		uint32_t step = global_args[2];
+		uint32_t pwr = global_args[3];
+		EnableRFOutput();
+		setRFA_PWR(pwr-1); // -1 because pwr is defined as 1,2,3,4 but MAX2870 expects 0,1,2,3
 		uint32_t i;
 		for (i=from; i<=to; i+=step){
 			  //printf("setting %d MHz\n", i);

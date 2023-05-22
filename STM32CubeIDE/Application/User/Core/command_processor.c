@@ -75,7 +75,6 @@ void process_command_string(char* string, command_t* global_command, uint32_t* g
 		*global_command = AMS_VERSION;
 	}else if (strcmp(command, "SWEEP") == 0){
 		*global_command = AMS_SWEEP;
-		printf("SETTING\n");
 	}else if (strcmp(command, "REGISTER")== 0){
 		*global_command = AMS_REGISTER;
 	}else if (strcmp(command, "SINGLE")== 0){
