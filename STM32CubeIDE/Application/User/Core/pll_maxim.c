@@ -197,9 +197,40 @@ void set_requested_frequency(uint32_t freq){
 		N_1MHZ_step = DIVA_caluclated/32;
 	}
 	uint32_t N_value = N_1MHZ_step * freq;
-	//printf("%d\n", DIVA_caluclated);
-	//printf("R: %d\n", R_value);
-	//printf("N: %d\n", N_value);
+	/*printf("requestd freq: %d \n", freq);
+	printf("band: %f\n", band);
+	printf("band_i: %d\n", band_i);
+	printf("1MHz step: %d \n", N_1MHZ_step);
+	printf("DIVA: %d\n", DIVA_caluclated);
+	printf("R: %d\n", R_value);
+	printf("N: %d\n", N_value);*/
+	setN(N_value);
+	setDIVA(DIVA_caluclated);
+	setR(R_value);
+	program_PLL();
+	// give time to allow PLL to lock into frequency
+	HAL_Delay(1);
+	//while (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_2) == GPIO_PIN_RESET){;}
+}
+
+// freq is in MHz
+void set_requested_frequency_NDIV(float freq, uint32_t NDIV){
+	// first determine required DIVA value
+	float divided_by_235 = freq/23.5;
+	float band = log2(divided_by_235);
+	uint32_t band_i = band;
+	uint32_t DIVA_caluclated = 128>>band_i;
+
+	uint32_t R_value = 16; // najviac jak sa da
+	float krok = 2*(1/(float)DIVA_caluclated);
+	uint32_t N_value = freq/krok;
+	/*printf("requestd freq: %f \n", freq);
+	printf("band: %f\n", band);
+	printf("band_i: %d\n", band_i);
+	printf("krok: %f \n", krok);
+	printf("%d\n", DIVA_caluclated);
+	printf("R: %d\n", R_value);
+	printf("N: %d\n", N_value);*/
 	setN(N_value);
 	setDIVA(DIVA_caluclated);
 	setR(R_value);
@@ -207,6 +238,7 @@ void set_requested_frequency(uint32_t freq){
 	// give time to allow PLL to lock into frequency
 	HAL_Delay(1);
 }
+
 /**
   * @brief Initialize chip as specified in datasheet
   * @retval GPIO_PinState Lock Detect
@@ -237,8 +269,8 @@ void write_regs_SOFT(){
 	//write to registers
 	uint32_t reg0 = 0x80320000;
 	uint32_t reg1 = 0x80033E81;
-	uint32_t reg2 = 0x0C004042;
-	uint32_t reg3 = 0x00000133;
+	uint32_t reg2 = 0x0C0041C2;
+	uint32_t reg3 = 0x0000800B;
 	uint32_t reg4 = 0x629802FC;
 	uint32_t reg5 = 0x00400005;
 	write_reg(reg5);

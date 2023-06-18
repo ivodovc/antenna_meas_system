@@ -27,6 +27,7 @@ uint8_t write_to_PLL(uint32_t data);
 void write_reg(uint32_t data);
 
 void set_requested_frequency(uint32_t);
+void set_requested_frequency_NDIV(float freq, uint32_t NDIV);
 
 void program_PLL();
 
